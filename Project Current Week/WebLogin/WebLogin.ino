@@ -1,9 +1,11 @@
 #include <WiFi.h>
+#include <time.h>
 const char* ssid = "Indruino_Student"; 
 const char* password = "Indruino2019";
 
 const int GPIO_PIN_NUMBER_25 = 25;
-
+int timezone = 7*3600;
+int dst = 0;
 // Set web server port number to 80
 WiFiServer server(80);
 String header;
@@ -30,11 +32,13 @@ Serial.println("WiFi connected.");
 Serial.println("IP address: ");
 Serial.println(WiFi.localIP());
 server.begin();
+configTime(timezone, dst, "vn.pool.ntp.org", "time.nist.gov");
 }
 
 void loop(){
 WiFiClient client = server.available(); 
-
+time_t now = time(nullptr);
+struct tm* p_tm = localtime(&now);
 if (client) { // If a new client connects,
 Serial.println("New Client."); 
 String currentLine = ""; 
@@ -76,7 +80,16 @@ if(header.indexOf("SW5kcnVpbm9TdHVkZW50OkluZHJ1aW5vMjAxOVN0dWRlbnQ=") >= 0) {
   client.println("<form><center>");
   client.println("<center> <button class=\"button\" name=\"LED\" value=\"ON\" type=\"submit\">LED ON</button>") ;
   client.println("<button class=\"button\" name=\"LED\" value=\"OFF\" type=\"submit\">LED OFF</button><br><br>");
-  client.println("</center></form></body></html>"); 
+  client.println("</center></form>");
+  client.println("<table><tr><th>VALUE</th><th>TimeStamp</th></tr>");
+  client.println("<tr><td>Value</td><td><span class=\"sensor\">");
+  client.print(p_tm->tm_hour);
+  client.print(" : ");
+  client.print(p_tm->tm_min);
+  client.print(" : ");
+  client.print(p_tm->tm_sec);
+  client.println("</span></td></tr>");
+  client.println("</body></html>"); 
   break;
 }
 // Wrong user or password, so HTTP request fails... 
